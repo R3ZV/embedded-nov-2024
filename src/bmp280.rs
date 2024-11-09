@@ -2,8 +2,8 @@
 //!
 //! This driver is built using [`embedded-hal`] traits.
 
-use embedded_hal_1 as ehal;
 use core::fmt;
+use embedded_hal_1 as ehal;
 
 /// The default address for the BMP280
 const DEFAULT_ADDRESS: u8 = 0x76;
@@ -63,7 +63,7 @@ impl<I2C: ehal::i2c::I2c> BMP280<I2C> {
     /// Create a new BMP280 driver with the default address
     pub fn new<E>(i2c: I2C) -> Result<BMP280<I2C>, E>
     where
-        I2C: ehal::i2c::I2c<Error = E>
+        I2C: ehal::i2c::I2c<Error = E>,
     {
         Self::new_with_address(i2c, DEFAULT_ADDRESS)
     }
@@ -91,7 +91,6 @@ impl<I2C: ehal::i2c::I2c> BMP280<I2C> {
         self.dig_p9 = ((data[23] as i16) << 8) | (data[22] as i16);
     }
 
-
     /// Reads and returns temperature
     pub fn temp(&mut self) -> f64 {
         let mut data: [u8; 6] = [0, 0, 0, 0, 0, 0];
@@ -101,7 +100,10 @@ impl<I2C: ehal::i2c::I2c> BMP280<I2C> {
         let temp = (data[3] as i32) << 12 | (data[4] as i32) << 4 | (data[5] as i32) >> 4;
 
         let v1 = (((temp >> 3) - ((self.dig_t1 as i32) << 1)) * (self.dig_t2 as i32)) >> 11;
-        let v2 = (((((temp >> 4) - (self.dig_t1 as i32)) * ((temp >> 4) - (self.dig_t1 as i32))) >> 12) * (self.dig_t3 as i32)) >> 14; 
+        let v2 = (((((temp >> 4) - (self.dig_t1 as i32)) * ((temp >> 4) - (self.dig_t1 as i32)))
+            >> 12)
+            * (self.dig_t3 as i32))
+            >> 14;
 
         let temp = ((v1 + v2) * 5 + 128) >> 8;
 
@@ -130,10 +132,7 @@ impl<I2C: ehal::i2c::I2c> BMP280<I2C> {
             x if x == Filter::c16 as u8 => Filter::c16,
             _ => Filter::unknown,
         };
-        Config {
-            t_sb,
-            filter,
-        }
+        Config { t_sb, filter }
     }
 
     /// Sets configuration
@@ -298,7 +297,8 @@ impl fmt::Display for Status {
         core::write!(
             f,
             "conversion is running: {}, NVM data being copied: {}",
-            self.measuring, self.im_update
+            self.measuring,
+            self.im_update
         )
     }
 }
